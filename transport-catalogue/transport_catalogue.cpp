@@ -1,7 +1,7 @@
 #include "transport_catalogue.h"
 
 namespace bus_catalog {
-    void TransportCatalogue::AddRoute(Bus& bus) {
+    void TransportCatalogue::AddRoute(const Bus& bus) {
         all_buses_.push_back(bus);
         for (const auto& route_stop : bus.stops) {
             for (auto& stop_ : all_stops_) {
@@ -10,6 +10,7 @@ namespace bus_catalog {
         }
         busname_to_bus_[all_buses_.back().number] = &all_buses_.back();
     }
+   
 
     void TransportCatalogue::AddStop(const Stop& stop) { 
         all_stops_.push_back(stop);
@@ -77,18 +78,13 @@ namespace bus_catalog {
     }
 
     void TransportCatalogue::SetDistance(Stop* const from, const Stop* const to, const int distance) {
-        from->stop_distances[{from, to}] = distance;
-        from->stop_distances[{to, from}] = distance;
+        stop_distances_[{from, to}] = distance;
     }
 
     int TransportCatalogue::GetDistance(const Stop* from, const Stop* to) const {
-
-        if (from->stop_distances.count({ from, to }))
-            return from->stop_distances.at({ from, to });
-        else if (from->stop_distances.count({ to, from }))
-            return from->stop_distances.at({ to, from });
-        else
-            return 0;
+        if (stop_distances_.count({ from, to })) return stop_distances_.at({ from, to });
+        else if (stop_distances_.count({ to, from })) return stop_distances_.at({ to, from });
+        else return 0;
     }
 
     size_t TransportCatalogue::CountUniqueStops(const std::string& route_number) const {

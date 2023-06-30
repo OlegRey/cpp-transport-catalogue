@@ -88,26 +88,25 @@ namespace bus_catalog {
             Stop* from = catalogue.FindStop(stop_from_name); 
 
             while (!line.empty()) {
-                int distanse = 0;
+                int distance = 0;
                 std::string stop_to_name;
-                distanse = std::stoi(line.substr(0, line.find_first_of("m to "))); 
+                distance = std::stoi(line.substr(0, line.find_first_of("m to "))); 
                 line.erase(0, line.find_first_of("m to ") + 5); 
                 if (line.find("m to ") == line.npos) {
                     stop_to_name = line.substr(0, line.npos - 1); 
                     Stop* to = catalogue.FindStop(stop_to_name); 
-                    catalogue.SetDistance(from, to, distanse);
-                    if (!catalogue.FindStop(to->name)->stop_distances.count({ from, to })) {
-
-                        catalogue.SetDistance(to, from, distanse);
+                    catalogue.SetDistance(from, to, distance);
+                    if (!catalogue.GetDistance(to, from)) { 
+                        catalogue.SetDistance(to, from, distance);
                     }
                     line.clear();
                 }
                 else {
                     stop_to_name = line.substr(0, line.find_first_of(','));
                     Stop* to = catalogue.FindStop(stop_to_name);
-                    catalogue.SetDistance(from, to, distanse);
-                    if (!catalogue.FindStop(to->name)->stop_distances.count({ from, to })) {
-                        catalogue.SetDistance(to, from, distanse);
+                    catalogue.SetDistance(from, to, distance);
+                    if (!catalogue.GetDistance(to, from)) { 
+                        catalogue.SetDistance(to, from, distance);
                     }
                     line.erase(0, line.find_first_of(',') + 2);
                 }

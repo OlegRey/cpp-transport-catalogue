@@ -1,5 +1,4 @@
 #pragma once 
-
 #include "geo.h" 
 
 #include <iostream> 
@@ -35,8 +34,7 @@ namespace bus_catalog {
         std::string name;
         geo::Coordinates coordinates;
         std::set<std::string> buses;
-        //std::unordered_map<std::string, int> stop_distances;//старый вариант
-        std::unordered_map<std::pair<const Stop*, const Stop*>, int, StopDistancesHasher> stop_distances;
+        //std::unordered_map<std::pair<const Stop*, const Stop*>, int, StopDistancesHasher> stop_distances; //старый вариант
     };
 
     struct RouteInfo {
@@ -48,7 +46,7 @@ namespace bus_catalog {
 
     class TransportCatalogue {
     public:
-        void AddRoute(Bus& bus);
+        void AddRoute(const Bus& bus);
         void AddStop(const Stop& stop);
         const Bus* FindRoute(const std::string& route_number) const;
         Stop* FindStop(const std::string& stop_name) const;
@@ -58,12 +56,14 @@ namespace bus_catalog {
         void SetDistance(Stop* const from, const Stop* const to, const int distance);
         int GetDistance(const Stop* from, const Stop* to) const;
 
+        
     private:
         size_t CountUniqueStops(const std::string& route_number) const;
         std::deque<Bus> all_buses_;
         std::deque<Stop> all_stops_;
         std::unordered_map<std::string_view, const Bus*> busname_to_bus_;
         std::unordered_map<std::string_view, Stop*> stopname_to_stop_;
+        std::unordered_map<std::pair<const Stop*, const Stop*>, int, StopDistancesHasher> stop_distances_; //новый вариант
 
     };
 }

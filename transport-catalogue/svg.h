@@ -22,7 +22,7 @@ namespace svg {
             , green(green)
             , blue(blue) {
         }
-        
+
         uint8_t red;
         uint8_t green;
         uint8_t blue;
@@ -44,7 +44,11 @@ namespace svg {
 
     using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
 
-   inline const Color NoneColor{ std::monostate() };
+    // Объявив в заголовочном файле константу со спецификатором inline,
+    // мы сделаем так, что она будет одной на все единицы трансляции,
+    // которые подключают этот заголовок.
+    // В противном случае каждая единица трансляции будет использовать свою копию этой константы
+    inline const Color NoneColor{ std::monostate() };
 
     std::ostream& operator<<(std::ostream& out, Color& color);
 
@@ -91,6 +95,10 @@ namespace svg {
         double y = 0;
     };
 
+    /*
+        * Вспомогательная структура, хранящая контекст для вывода SVG-документа с отступами.
+        * Хранит ссылку на поток вывода, текущее значение и шаг отступа при выводе элемента
+        */
     struct RenderContext {
         RenderContext(std::ostream& out)
             : out(out) {
@@ -117,6 +125,11 @@ namespace svg {
         int indent = 0;
     };
 
+    /*
+        * Абстрактный базовый класс Object служит для унифицированного хранения
+        * конкретных тегов SVG-документа
+        * Реализует паттерн "Шаблонный метод" для вывода содержимого тега
+        */
     class Object {
     public:
         void Render(const RenderContext& context) const;
@@ -127,7 +140,11 @@ namespace svg {
         virtual void RenderObject(const RenderContext& context) const = 0;
     };
 
-    
+    /*
+        * ObjectContainer задаёт интерфейс для доступа к контейнеру SVG-объектов.
+        * Через этот интерфейс Drawable-объекты могут визуализировать себя,
+        * добавляя в контейнер SVG-примитивы
+        */
     class ObjectContainer {
     public:
         template <typename T>
@@ -141,12 +158,22 @@ namespace svg {
         ~ObjectContainer() = default;
     };
 
+    /*
+        * Интерфейс Drawable унифицирует работу с объектами, которые можно нарисовать,
+        * подключив SVG-библиотеку. Для этого в нём есть метод Draw, принимающий ссылку
+        * на интерфейс ObjectContainer
+        */
     class Drawable {
     public:
         virtual ~Drawable() = default;
         virtual void Draw(ObjectContainer& container) const = 0;
     };
 
+    /*
+        * вспомогательный базовый класс svg::PathProps.
+        * Путь — представленный в виде последовательности различных контуров векторный объект,
+        * который будет содержать свойства, управляющие параметрами заливки и контура
+        */
     template <typename Owner>
     class PathProps {
     public:
@@ -212,6 +239,11 @@ namespace svg {
         std::optional<StrokeLineJoin> line_join_;
     };
 
+
+    /*
+        * Класс Circle моделирует элемент <circle> для отображения круга
+        * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
+        */
     class Circle final : public Object, public PathProps<Circle> {
     public:
         Circle& SetCenter(Point center);
@@ -224,6 +256,10 @@ namespace svg {
         double radius_ = 1.0;
     };
 
+    /*
+        * Класс Polyline моделирует элемент <polyline> для отображения ломаных линий
+        * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
+        */
     class Polyline final : public Object, public PathProps<Polyline> {
     public:
         // Добавляет очередную вершину к ломаной линии
@@ -234,6 +270,10 @@ namespace svg {
         std::vector<Point> points_;
     };
 
+    /*
+        * Класс Text моделирует элемент <text> для отображения текста
+        * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
+        */
     class Text final : public Object, public PathProps<Text> {
     public:
         // Задаёт координаты опорной точки (атрибуты x и y)
@@ -277,4 +317,4 @@ namespace svg {
         std::vector<std::unique_ptr<Object>> objects_;
     };
 
-}
+} // namespace svg

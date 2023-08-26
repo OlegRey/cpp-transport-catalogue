@@ -1,67 +1,93 @@
 #pragma once
 
 #include "json.h"
+#include <stack>
+#include <string>
+#include <memory>
 
-#include <optional>
+namespace bus_catalog {
+    namespace detail {
+        namespace json {
+            namespace builder {
 
-namespace json {
+                class KeyContext;
+                class DictionaryContext;
+                class ArrayContext;
 
-    class Builder {
-    public:
-        class DictItemContext;
-        class DictKeyContext;
-        class ArrayItemContext;
+                class Builder {
+                public:
+                    Node make_node(const Node::Value& value_);
+                    void add_node(const Node& node);
 
-        Builder();
-        DictKeyContext Key(std::string key);
-        Builder& Value(Node::Value value);
-        DictItemContext StartDict();
-        Builder& EndDict();
-        ArrayItemContext StartArray();
-        Builder& EndArray();
-        Node Build();
-        Node GetNode(Node::Value value);
+                    KeyContext key(const std::string& key_);
+                    Builder& value(const Node::Value& value);
 
-    private:
-        Node root_{ nullptr };
-        std::vector<Node*> nodes_stack_;
-        std::optional<std::string> key_{ std::nullopt };
-    };
+                    DictionaryContext start_dict();
+                    Builder& end_dict();
 
-    class Builder::DictItemContext {
-    public:
-        DictItemContext(Builder& builder);
+                    ArrayContext start_array();
+                    Builder& end_array();
 
-        DictKeyContext Key(std::string key);
-        Builder& EndDict();
+                    Node build();
 
-    private:
-        Builder& builder_;
-    };
+                private:
+                    Node root_;
+                    std::vector<std::unique_ptr<Node>> nodes_stack_;
+                };
 
-    class Builder::ArrayItemContext {
-    public:
-        ArrayItemContext(Builder& builder);
+                class BaseContext {
+                public:
+                    BaseContext(Builder& builder);
 
-        ArrayItemContext Value(Node::Value value);
-        DictItemContext StartDict();
-        Builder& EndArray();
-        ArrayItemContext StartArray();
+                    KeyContext key(const std::string& key);
+                    Builder& value(const Node::Value& value);
 
-    private:
-        Builder& builder_;
-    };
+                    DictionaryContext start_dict();
+                    Builder& end_dict();
 
-    class Builder::DictKeyContext {
-    public:
-        DictKeyContext(Builder& builder);
+                    ArrayContext start_array();
+                    Builder& end_array();
 
-        DictItemContext Value(Node::Value value);
-        ArrayItemContext StartArray();
-        DictItemContext StartDict();
+                protected:
+                    Builder& builder_;
+                };
 
-    private:
-        Builder& builder_;
-    };
+                class KeyContext : public BaseContext {
+                public:
+                    KeyContext(Builder& builder);
 
+                    KeyContext key(const std::string& key) = delete;
+
+                    BaseContext end_dict() = delete;
+                    BaseContext end_array() = delete;
+
+                    DictionaryContext value(const Node::Value& value);
+                };
+
+                class DictionaryContext : public BaseContext {
+                public:
+                    DictionaryContext(Builder& builder);
+
+                    DictionaryContext start_dict() = delete;
+
+                    ArrayContext start_array() = delete;
+                    Builder& end_array() = delete;
+
+                    Builder& value(const Node::Value& value) = delete;
+                };
+
+                class ArrayContext : public BaseContext {
+                public:
+                    ArrayContext(Builder& builder);
+
+                    KeyContext key(const std::string& key) = delete;
+
+                    Builder& end_dict() = delete;
+
+                    ArrayContext value(const Node::Value& value);
+                };
+
+            }
+        }
+    }
 }

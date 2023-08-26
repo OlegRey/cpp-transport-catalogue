@@ -1,39 +1,44 @@
 #pragma once
-
 #include "json.h"
+#include "serialization.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
-#include "request_handler.h"
+#include "transport_router.h"
 
-#include <iostream>
+namespace bus_catalog {
+    namespace detail {
+        namespace json {
 
-class JsonReader {
-public:
-    JsonReader(std::istream& input)
-        : input_(json::Load(input))
-    {}
+            class JSONReader {
+            public:
+                JSONReader() = default;
+                JSONReader(Document doc);
+                JSONReader(std::istream& input);
 
-    const json::Node& GetBaseRequests() const;
-    const json::Node& GetStatRequests() const;
-    const json::Node& GetRenderSettings() const;
-    const json::Node& GetRoutingSettings() const;
+                void parse_node_base(const Node& root, TransportCatalogue& catalogue);
+                void parse_node_stat(const Node& root, std::vector<StatRequest>& stat_request);
+                void parse_node_render(const Node& node, map_renderer::RenderSettings& render_settings);
+                void parse_node_routing(const Node& node, router::RoutingSettings& route_set);
+                void parse_node_serialization(const Node& node, serialization::SerializationSettings& serialization_set);
 
-    void ProcessRequests(const json::Node& stat_requests, RequestHandler& rh) const;
+                void parse_node_make_base(TransportCatalogue& catalogue,
+                    map_renderer::RenderSettings& render_settings,
+                    router::RoutingSettings& routing_settings,
+                    serialization::SerializationSettings& serialization_settings);
 
-    void FillCatalogue(bus_catalog::Catalogue& catalogue);
-    renderer::MapRenderer FillRenderSettings(const json::Node& settings) const;
-    bus_catalog::Router FillRoutingSettings(const json::Node& settings) const;
+                void parse_node_process_requests(std::vector<StatRequest>& stat_request,
+                    serialization::SerializationSettings& serialization_settings);
 
-    const json::Node PrintRoute(const json::Dict& request_map, RequestHandler& rh) const;
-    const json::Node PrintStop(const json::Dict& request_map, RequestHandler& rh) const;
-    const json::Node PrintMap(const json::Dict& request_map, RequestHandler& rh) const;
-    const json::Node PrintRouting(const json::Dict& request_map, RequestHandler& rh) const;
+                Stop parse_node_stop(Node& node);
+                Bus parse_node_bus(Node& node, TransportCatalogue& catalogue);
+                std::vector<Distance> parse_node_distances(Node& node, TransportCatalogue& catalogue);
 
-private:
-    json::Document input_;
-    json::Node dummy_ = nullptr;
+                const Document& get_document() const;
 
-    std::tuple<std::string_view, geo::Coordinates, std::map<std::string_view, int>> FillStop(const json::Dict& request_map) const;
-    void FillStopDistances(bus_catalog::Catalogue& catalogue) const;
-    std::tuple<std::string_view, std::vector<const bus_catalog::Stop*>, bool> FillRoute(const json::Dict& request_map, bus_catalog::Catalogue& catalogue) const;
-};
+            private:
+                Document document_;
+            };
+
+        }
+    }
+}

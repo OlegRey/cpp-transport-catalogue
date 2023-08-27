@@ -26,12 +26,12 @@ namespace graph {
     public:
         DirectedWeightedGraph() = default;
         explicit DirectedWeightedGraph(size_t vertex_count);
-        EdgeId add_edge(const Edge<Weight>& edge);
+        EdgeId AddEdge(const Edge<Weight>& edge);
 
-        size_t get_vertex_count() const;
-        size_t get_edge_count() const;
-        const Edge<Weight>& get_edge(EdgeId edge_id) const;
-        IncidentEdgesRange get_incident_edges(VertexId vertex) const;
+        size_t GetVertexCount() const;
+        size_t GetEdgeCount() const;
+        const Edge<Weight>& GetEdge(EdgeId edge_id) const;
+        IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
 
     private:
         std::vector<Edge<Weight>> edges_;
@@ -42,7 +42,7 @@ namespace graph {
     DirectedWeightedGraph<Weight>::DirectedWeightedGraph(size_t vertex_count) : incidence_lists_(vertex_count) {}
 
     template <typename Weight>
-    EdgeId DirectedWeightedGraph<Weight>::add_edge(const Edge<Weight>& edge) {
+    EdgeId DirectedWeightedGraph<Weight>::AddEdge(const Edge<Weight>& edge) {
         edges_.push_back(edge);
 
         const EdgeId id = edges_.size() - 1;
@@ -53,17 +53,17 @@ namespace graph {
     }
 
     template <typename Weight>
-    size_t DirectedWeightedGraph<Weight>::get_vertex_count() const { return incidence_lists_.size(); }
+    size_t DirectedWeightedGraph<Weight>::GetVertexCount() const { return incidence_lists_.size(); }
 
     template <typename Weight>
-    size_t DirectedWeightedGraph<Weight>::get_edge_count() const { return edges_.size(); }
+    size_t DirectedWeightedGraph<Weight>::GetEdgeCount() const { return edges_.size(); }
 
     template <typename Weight>
-    const Edge<Weight>& DirectedWeightedGraph<Weight>::get_edge(EdgeId edge_id) const { return edges_.at(edge_id); }
+    const Edge<Weight>& DirectedWeightedGraph<Weight>::GetEdge(EdgeId edge_id) const { return edges_.at(edge_id); }
 
     template <typename Weight>
-    typename DirectedWeightedGraph<Weight>::IncidentEdgesRange DirectedWeightedGraph<Weight>::get_incident_edges(VertexId vertex) const {
-        return ranges::as_range(incidence_lists_.at(vertex));
+    typename DirectedWeightedGraph<Weight>::IncidentEdgesRange DirectedWeightedGraph<Weight>::GetIncidentEdges(VertexId vertex) const {
+        return ranges::AsRange(incidence_lists_.at(vertex));
     }
 
 }

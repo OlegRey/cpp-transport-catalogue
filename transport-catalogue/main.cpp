@@ -41,34 +41,34 @@ int main(int argc, char* argv[]) {
 
         json_reader = JSONReader(cin);
 
-        json_reader.parse_node_make_base(transport_catalogue,
+        json_reader.ParseNodeMakeBase(transport_catalogue,
             render_settings,
             routing_settings,
             serialization_settings);
 
         ofstream out_file(serialization_settings.file_name, ios::binary);
-        catalogue_serialization(transport_catalogue, render_settings, routing_settings, out_file);
+        SerializationCatalogue(transport_catalogue, render_settings, routing_settings, out_file);
 
     }
     else if (mode == "process_requests"sv) {
 
         json_reader = JSONReader(cin);
 
-        json_reader.parse_node_process_requests(stat_request,
+        json_reader.ParseNodeProcessRequests(stat_request,
             serialization_settings);
 
         ifstream in_file(serialization_settings.file_name, ios::binary);
 
-        Catalogue catalogue = catalogue_deserialization(in_file);
+        Catalogue catalogue = DeserializationCatalogue(in_file);
 
         RequestHandler request_handler;
 
-        request_handler.execute_queries(catalogue.transport_catalogue_,
+        request_handler.ExecuteQueries(catalogue.transport_catalogue_,
             stat_request,
             catalogue.render_settings_,
             catalogue.routing_settings_);
 
-        print(request_handler.get_document(), cout);
+        Print(request_handler.GetDocument(), cout);
 
     }
     else {

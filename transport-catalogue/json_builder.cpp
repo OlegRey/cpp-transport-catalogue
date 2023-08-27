@@ -7,26 +7,26 @@ namespace bus_catalog {
 
                 BaseContext::BaseContext(Builder& builder) : builder_(builder) {}
 
-                KeyContext BaseContext::key(const std::string& key) { return builder_.key(key); }
-                Builder& BaseContext::value(const Node::Value& value) { return builder_.value(value); }
+                KeyContext BaseContext::Key(const std::string& Key) { return builder_.Key(Key); }
+                Builder& BaseContext::Value(const Node::Value& value) { return builder_.Value(value); }
 
-                DictionaryContext BaseContext::start_dict() { return DictionaryContext(builder_.start_dict()); }
-                Builder& BaseContext::end_dict() { return builder_.end_dict(); }
+                DictionaryContext BaseContext::BeginDict() { return DictionaryContext(builder_.BeginDict()); }
+                Builder& BaseContext::EndDict() { return builder_.EndDict(); }
 
-                ArrayContext BaseContext::start_array() { return ArrayContext(builder_.start_array()); }
-                Builder& BaseContext::end_array() { return builder_.end_array(); }
+                ArrayContext BaseContext::BeginArray() { return ArrayContext(builder_.BeginArray()); }
+                Builder& BaseContext::EndArray() { return builder_.EndArray(); }
 
                 KeyContext::KeyContext(Builder& builder) : BaseContext(builder) {}
 
-                DictionaryContext KeyContext::value(const Node::Value& value) { return BaseContext::value(std::move(value)); }
+                DictionaryContext KeyContext::Value(const Node::Value& value) { return BaseContext::Value(std::move(value)); }
 
                 DictionaryContext::DictionaryContext(Builder& builder) : BaseContext(builder) {}
 
                 ArrayContext::ArrayContext(Builder& builder) : BaseContext(builder) {}
 
-                ArrayContext ArrayContext::value(const Node::Value& value) { return BaseContext::value(std::move(value)); }
+                ArrayContext ArrayContext::Value(const Node::Value& value) { return BaseContext::Value(std::move(value)); }
 
-                Node Builder::make_node(const Node::Value& value_) {
+                Node Builder::MakeNode(const Node::Value& value_) {
                     Node node;
 
                     if (std::holds_alternative<bool>(value_)) {
@@ -66,10 +66,10 @@ namespace bus_catalog {
                     return node;
                 }
 
-                void Builder::add_node(const Node& node) {
+                void Builder::AddNode(const Node& node) {
                     if (nodes_stack_.empty()) {
 
-                        if (!root_.is_null()) {
+                        if (!root_.IsNull()) {
                             throw std::logic_error("root has been added");
                         }
 
@@ -79,14 +79,14 @@ namespace bus_catalog {
                     }
                     else {
 
-                        if (!nodes_stack_.back()->is_array()
-                            && !nodes_stack_.back()->is_string()) {
+                        if (!nodes_stack_.back()->IsArray()
+                            && !nodes_stack_.back()->IsString()) {
 
                             throw std::logic_error("unable to create node");
                         }
 
-                        if (nodes_stack_.back()->is_array()) {
-                            Array arr = nodes_stack_.back()->as_array();
+                        if (nodes_stack_.back()->IsArray()) {
+                            Array arr = nodes_stack_.back()->AsArray();
                             arr.emplace_back(node);
 
                             nodes_stack_.pop_back();
@@ -96,12 +96,12 @@ namespace bus_catalog {
                             return;
                         }
 
-                        if (nodes_stack_.back()->is_string()) {
-                            std::string str = nodes_stack_.back()->as_string();
+                        if (nodes_stack_.back()->IsString()) {
+                            std::string str = nodes_stack_.back()->AsString();
                             nodes_stack_.pop_back();
 
-                            if (nodes_stack_.back()->is_dict()) {
-                                Dict dictionary = nodes_stack_.back()->as_dict();
+                            if (nodes_stack_.back()->IsDict()) {
+                                Dict dictionary = nodes_stack_.back()->AsDict();
                                 dictionary.emplace(std::move(str), node);
 
                                 nodes_stack_.pop_back();
@@ -114,74 +114,74 @@ namespace bus_catalog {
                     }
                 }
 
-                KeyContext Builder::key(const std::string& key_) {
+                KeyContext Builder::Key(const std::string& key_) {
                     if (nodes_stack_.empty()) {
                         throw std::logic_error("unable to create key");
                     }
 
                     auto key_ptr = std::make_unique<Node>(key_);
 
-                    if (nodes_stack_.back()->is_dict()) {
+                    if (nodes_stack_.back()->IsDict()) {
                         nodes_stack_.emplace_back(std::move(key_ptr));
                     }
 
                     return KeyContext(*this);
                 }
 
-                Builder& Builder::value(const Node::Value& value_) {
-                    add_node(make_node(value_));
+                Builder& Builder::Value(const Node::Value& value_) {
+                    AddNode(MakeNode(value_));
 
                     return *this;
                 }
 
-                DictionaryContext Builder::start_dict() {
+                DictionaryContext Builder::BeginDict() {
                     nodes_stack_.emplace_back(std::move(std::make_unique<Node>(Dict())));
 
                     return DictionaryContext(*this);
                 }
 
-                Builder& Builder::end_dict() {
+                Builder& Builder::EndDict() {
                     if (nodes_stack_.empty()) {
                         throw std::logic_error("unable to close as without opening");
                     }
 
                     Node node = *nodes_stack_.back();
 
-                    if (!node.is_dict()) {
+                    if (!node.IsDict()) {
                         throw std::logic_error("object isn't dictionary");
                     }
 
                     nodes_stack_.pop_back();
-                    add_node(node);
+                    AddNode(node);
 
                     return *this;
                 }
 
-                ArrayContext Builder::start_array() {
+                ArrayContext Builder::BeginArray() {
                     nodes_stack_.emplace_back(std::move(std::make_unique<Node>(Array())));
 
                     return ArrayContext(*this);
                 }
 
-                Builder& Builder::end_array() {
+                Builder& Builder::EndArray() {
                     if (nodes_stack_.empty()) {
                         throw std::logic_error("unable to close without opening");
                     }
 
                     Node node = *nodes_stack_.back();
 
-                    if (!node.is_array()) {
+                    if (!node.IsArray()) {
                         throw std::logic_error("object isn't array");
                     }
 
                     nodes_stack_.pop_back();
-                    add_node(node);
+                    AddNode(node);
 
                     return *this;
                 }
 
-                Node Builder::build() {
-                    if (root_.is_null()) {
+                Node Builder::Build() {
+                    if (root_.IsNull()) {
                         throw std::logic_error("empty json");
                     }
 
